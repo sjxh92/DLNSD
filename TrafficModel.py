@@ -1,5 +1,5 @@
 import numpy as np
-from MetroNetwork import NetworkEnvironment
+from PhysicalNetwork import NetworkEnvironment
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt

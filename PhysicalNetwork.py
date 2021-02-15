@@ -22,16 +22,40 @@ WAVE_CAPACITY = 10
 DESTINATION = 7
 
 
+def extract_path(nodes: tuple) -> list:
+    # print(" extract path ")
+    # print(nodes)
+    assert len(nodes) >= 2
+    rtn = []
+    start_node = nodes[0]
+    for i in range(1, len(nodes)):
+        end_node = nodes[i]
+        rtn.append((start_node, end_node))
+        start_node = end_node
+    return rtn
+
+def extract_path_pro(nodes: tuple):
+    print("extract path pro")
+    print(nodes)
+    assert len(nodes) >= 2
+    rtn = []
+    start_node = nodes[0]
+    for i in range(1, len(nodes)):
+        for j in range(i, len(nodes)):
+            end_node = nodes[j]
+            rtn.append((start_node, end_node))
+        start_node = nodes[i]
+    return rtn
+
+
+
 class NetworkEnvironment(nx.DiGraph):
 
     def __init__(self, filename: str, file_prefix: str):
-        # self.n_feature = NODE_NUM + 2 + J_NODE * M_VM + K_LINK * W_WAVELENGTH
 
         # node utilization + link utilization + request node + request traffic + holding time
         super(NetworkEnvironment, self).__init__()
         self.net = None
-        self.action_space = []
-        self.n_action = len(self.action_space)
         self.memory = np.zeros([0, 4], dtype=int)  # nodeid, traffic, starttime, endtime
         self.sliceId = 0
 
@@ -52,11 +76,9 @@ class NetworkEnvironment(nx.DiGraph):
             if self.origin_data[i, 4] == 'Core_link':
                 wave_avai1 = 10 * np.ones(shape=(40,), dtype=np.float32)
                 wave_avai2 = 10 * np.ones(shape=(40,), dtype=np.float32)
-                link_type = 'Core_link'
             elif self.origin_data[i, 4] == 'Extension_link':
                 wave_avai1 = 10 * np.ones(shape=(20,), dtype=np.float32)
                 wave_avai2 = 10 * np.ones(shape=(20,), dtype=np.float32)
-                link_type = 'Extension_link'
             stat1 = np.zeros(shape=(2000,))
             stat2 = np.zeros(shape=(2000,))
             self.add_edge(self.origin_data[i, 2], self.origin_data[i, 3], type=self.origin_data[i, 1],
@@ -65,18 +87,37 @@ class NetworkEnvironment(nx.DiGraph):
                           weight=float(self.origin_data[i, 5]), capacity=wave_avai2, stat=stat2)
 
 
+    def ksp(self, source, target, k):
+        """
+        calculate the paths
+        :param k:
+        :param source:
+    :param target:
+        :return:
+        """
+        if source is None:
+            return [None]
+        paths = nx.shortest_simple_paths(self, source, target)
+        path_k = []
+        index = 0
+        for i in paths:
+            index += 1
+            if index > k:
+                break
+            path_k.append(i)
+        return path_k
+
     # *_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*
     def set_wave_capacity_edge(self,
-                               edge: list,
+                               edge: tuple,
                                traffic: int,
                                wave: int,
                                slice_index: int,
                                state: bool,
                                check: bool = True):
         if check:
-            print('====')
-            print(self.get_edge_data(edge[0], edge[1])['capacity'][wave])
-            assert self.get_edge_data(edge[0], edge[1])['capacity'][wave] == 0
+            print('this is set wave capacity edge for slice: ', slice_index)
+            # assert self.get_edge_data(edge[0], edge[1])['capacity'][wave] == 0
         if state:
             balance = self.get_edge_data(edge[0], edge[1])['capacity'][wave]
             if balance < traffic:
@@ -182,6 +223,18 @@ class NetworkEnvironment(nx.DiGraph):
         else:
             self.nodes[node_index]['capacity'] += traffic
             return True
+
+    def first_fit_wavelength(self, path:tuple, bandwidth: int):
+        edges = extract_path(path)
+        for wave in range(0, C.WAVE_NUM):
+            if_possible = True
+            for edge in edges:
+                if self.get_edge_data(edge[0],edge[1])['capacity'][wave] < bandwidth:
+                    if_possible = False
+                    break
+            if if_possible:
+                return wave
+        return -1
 
     def exist_rw_allocation(self, path_list: list, start_time: int, end_time: int) -> [bool, int, int]:
         """
@@ -389,18 +442,6 @@ class NetworkEnvironment(nx.DiGraph):
         else:
             return True
 
-
-    def extract_path(self, nodes: list) -> list:
-        # print(" extract path ")
-        # print(nodes)
-        assert len(nodes) >= 2
-        rtn = []
-        start_node = nodes[0]
-        for i in range(1, len(nodes)):
-            end_node = nodes[i]
-            rtn.append((start_node, end_node))
-            start_node = end_node
-        return rtn
 
     def showPath(self, path: list):
         edges = self.extract_path(path)

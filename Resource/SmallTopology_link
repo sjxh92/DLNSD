@@ -1,0 +1,14 @@
+0,S_Link_CR_001,1,2,Core_link,48.8
+1,S_Link_CR_001,2,1,Core_link,48.8
+2,S_Link_CR_001,2,3,Core_link,48.8
+3,S_Link_CR_001,3,2,Core_link,48.8
+4,S_Link_CR_001,3,4,Core_link,48.8
+5,S_Link_CR_001,4,3,Core_link,48.8
+6,S_Link_CR_001,4,5,Core_link,48.8
+7,S_Link_CR_001,5,4,Core_link,48.8
+8,S_Link_CR_001,5,6,Core_link,48.8
+9,S_Link_CR_001,6,5,Core_link,48.8
+10,S_Link_CR_001,6,1,Core_link,48.8
+11,S_Link_CR_001,1,6,Core_link,48.8
+12,S_Link_CR_001,2,5,Core_link,48.8
+13,S_Link_CR_001,5,2,Core_link,48.8
